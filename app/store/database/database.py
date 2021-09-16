@@ -36,5 +36,5 @@ class Database:
         await self.db.gino.create_all()
 
     async def disconnect(self, *_, **kw):
-        # self.app = None
+        self.app = None
         await db.pop_bind().close()
