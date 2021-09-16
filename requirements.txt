@@ -1,0 +1,9 @@
+aiohttp>=3.7.4.post0
+aiohttp-apispec==2.2.1
+aiohttp-session==2.9.0
+cryptography==3.4.8
+pyyaml==5.4.1
+
+
+gino==1.0.1
+alembic==1.6.5
