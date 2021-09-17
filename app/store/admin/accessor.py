@@ -29,5 +29,4 @@ class AdminAccessor(BaseAccessor):
             password=sha256(password.encode()).hexdigest(),
         )
 
-        # self.app.store.admins.append(admin)
         return admin.to_dc()

@@ -7,3 +7,7 @@ pyyaml==5.4.1
 
 gino==1.0.1
 alembic==1.6.5
+
+
+marshmallow==3.13.0
+marshmallow-dataclass==8.5.3
