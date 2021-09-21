@@ -1,4 +1,10 @@
+import typing
 from logging import getLogger
+
+from app.store.vk_api.dataclasses import Update, Message
+
+if typing.TYPE_CHECKING:
+    from app.web.app import Application
 
 
 class BotManager:
@@ -6,3 +12,12 @@ class BotManager:
         self.app = app
         self.bot = None
         self.logger = getLogger("handler")
+
+    async def handle_updates(self, updates: list[Update]):
+        for update in updates:
+            await self.app.store.vk_api.send_message(
+                Message(
+                    user_id=update.object.user_id,
+                    text="Привет!",
+                )
+            )
