@@ -26,6 +26,7 @@ class GameModel(db.Model):
     start = db.Column(db.DateTime(), nullable=False)
     end = db.Column(db.DateTime(), nullable=False)
     theme_id = db.Column(db.ForeignKey("themes.id"), nullable=False) # ondelete="CASCADE"
+    last_question = db.Column(db.Integer())
 
     def to_dc(self):
         return Game(

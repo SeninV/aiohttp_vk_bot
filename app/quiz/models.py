@@ -72,3 +72,4 @@ class QuestionModel(db.Model):
     @add_answer.setter
     def add_answer(self, val: AnswerModel):
         self._answers.append(val)
+

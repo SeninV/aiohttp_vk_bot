@@ -28,5 +28,4 @@ class AdminAccessor(BaseAccessor):
             email=email,
             password=sha256(password.encode()).hexdigest(),
         )
-
         return admin.to_dc()
