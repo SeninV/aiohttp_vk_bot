@@ -13,6 +13,9 @@ class BotManager:
         self.bot = None
         self.logger = getLogger("handler")
 
+    async def start_game(self):
+        pass
+
     async def handle_updates(self, updates: list[Update]):
         for update in updates:
             await self.app.store.vk_api.send_message(
@@ -21,3 +24,4 @@ class BotManager:
                     text="Привет!",
                 )
             )
+            await self.start_game()
