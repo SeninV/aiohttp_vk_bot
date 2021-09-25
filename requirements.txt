@@ -29,3 +29,6 @@ beautifulsoup4==4.9.3
 alembic==1.6.5
 aiohttp-session==2.9.0
 cryptography==3.4.8
+
+
+vk-api=11.9.4
