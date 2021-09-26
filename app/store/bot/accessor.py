@@ -71,6 +71,13 @@ class BotAccessor(BaseAccessor):
             if ans.is_correct:
                 return ans.title
 
+    async def stat_game_response(self, game_id):
+        participants = await ScoreModel.query.where(ScoreModel.game_id == game_id).order_by(ScoreModel.count.desc()).gino.all()
+        text = ""
+        for i, par in enumerate(participants, 1):
+            text += f"%0A {i}) @id{par.user_id} - {par.count}"
+        return text
+
         # await self.app.store.vk_api.send_keyboard(
         #     Message(
         #         text="Клава",

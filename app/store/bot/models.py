@@ -95,4 +95,4 @@ class ScoreModel(db.Model):
 
 @dataclass
 class StartGame:
-    start_game: bool
+    flag: bool
