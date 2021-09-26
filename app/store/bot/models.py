@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import List
 
+from app.quiz.models import Question, QuestionModel
 from app.store.database.gino import db
 
 
@@ -12,6 +14,14 @@ class Game:
     start: datetime
     end: datetime
     theme: str
+    used_questions: List[str]
+
+    @property
+    def get_question(self):
+        return self.used_questions
+
+
+    # last_question: array
 #    Лист из вопросов которые были использованы
 #    (для того что бы можно было продолжить игру после падения
 #    и что бы вопросы не повторялись)
@@ -26,7 +36,8 @@ class GameModel(db.Model):
     start = db.Column(db.DateTime(), nullable=False)
     end = db.Column(db.DateTime(), nullable=False)
     theme = db.Column(db.ForeignKey("themes.title"), nullable=False) # ondelete="CASCADE"
-    last_question = db.Column(db.Integer())
+    used_questions = db.Column(db.ARRAY(db.String()))
+
 
     def to_dc(self):
         return Game(
@@ -36,6 +47,7 @@ class GameModel(db.Model):
             start=self.start,
             end=self.end,
             theme=self.theme,
+            used_questions=self.used_questions,
         )
 
 
