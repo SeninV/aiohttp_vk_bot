@@ -148,40 +148,40 @@ class VkApiAccessor(BaseAccessor):
 
             # data["response"]["items"]
     # Клавиатура для вк
-    # def get_but(self, text: str):
-    #     return{
-    #         "action": {
-    #             "type": "text",
-    #             "payload": "{\"button\": \"1\"}",
-    #             "label": f"{text}"
-    #         },
-    #         "color": "negative"
-    #     }
-    # def get_keyboard(self):
-    #     keyboard = {
-    #         "one_time": True,
-    #         "buttons": [[
-    #             self.get_but('asd'), self.get_but('q')
-    #         ]]
-    #     }
-    #     keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
-    #     keyboard = str(keyboard.decode('utf-8'))
-    #     return keyboard
-    #
-    #
-    # async def send_keyboard(self, message: Message) -> None:
-    #     async with self.session.get(
-    #             self._build_query(
-    #                 API_PATH,
-    #                 "messages.send",
-    #                 params={
-    #                     "random_id": random.randint(1, 2 ** 32),
-    #                     "peer_id": message.peer_id,
-    #                     "message": message.text,
-    #                     "access_token": self.app.config.bot.token,
-    #                     "keyboard": self.get_keyboard()
-    #                 },
-    #             )
-    #     ) as resp:
-    #         data = await resp.json()
-    #         self.logger.info(data)
+    def get_but(self, text: str):
+        return{
+            "action": {
+                "type": "text",
+                "payload": "{\"button\": \"1\"}",
+                "label": f"{text}"
+            },
+            "color": "negative"
+        }
+    def get_keyboard(self, text: typing.List[str]):
+        keyboard = {
+            "one_time": True,
+            "buttons": [[
+                self.get_but('asd'), self.get_but('q')
+            ]]
+        }
+        keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+        keyboard = str(keyboard.decode('utf-8'))
+        return keyboard
+
+
+    async def send_keyboard(self, message: Message) -> None:
+        async with self.session.get(
+                self._build_query(
+                    API_PATH,
+                    "messages.send",
+                    params={
+                        "random_id": random.randint(1, 2 ** 32),
+                        "peer_id": message.peer_id,
+                        "message": message.text,
+                        "access_token": self.app.config.bot.token,
+                        "keyboard": self.get_keyboard()
+                    },
+                )
+        ) as resp:
+            data = await resp.json()
+            self.logger.info(data)

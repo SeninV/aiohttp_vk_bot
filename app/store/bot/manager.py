@@ -124,6 +124,7 @@ class BotManager:
 
             # Если игрок уже начал игру и выбрал тему
             elif status == 'start':
+                self.start[game.id] = False
                 themes = await self.app.store.bot_accessor.get_list_themes_for_response()
                 for theme in themes:
                     if update.object.body == theme:
@@ -131,16 +132,18 @@ class BotManager:
                         await self.start_game(update, theme, game_id)
                         # посылаем первую тему
                         await self.ask_question(update, theme, game_id)
-                if self.start == {}:
+                # Если не нашел тему то посылаем список тем заново
+                if self.start[game.id] == False:
                     themes = await self.app.store.bot_accessor.get_list_themes_for_response()
                     text_themes = self.app.store.bot_accessor.theme_response(themes)
                     # высылаем список тем, что бы пользователь определился
                     await self.app.store.vk_api.send_message(
                         Message(
-                            text=f"Выберите тему: {text_themes}",
+                            text=f"Тема не найдена( %0A Выберите тему: {text_themes}",
                             peer_id=update.object.peer_id,
                         )
                     )
+
 
 
 
@@ -163,8 +166,8 @@ class BotManager:
 
             elif status == 'ask':
                 game_id = game.id
-                # Проверяем не выключился ли сервер на этом моменте, если выключился обнуляем попытки и задаем следующий вопрос
                 user_attempts = (await self.app.store.bot_accessor.get_scores(game_id, update.object.user_id)).user_attempts
+                # Проверяем не выключился ли сервер на этом моменте, если выключился обнуляем попытки и задаем следующий вопрос
                 if self.start == {}:
                     self.start[game.id] = True
                 # Задаем вопрос повторно

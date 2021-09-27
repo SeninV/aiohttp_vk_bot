@@ -71,9 +71,9 @@ class BotAccessor(BaseAccessor):
 
     def theme_response(self, theme: List[str]) -> str:
         text = ""
-        for i in theme:
-            if i != "No_theme":
-                text += f"%0A {i} "
+        for i, th in enumerate(theme):
+            if th != "No_theme":
+                text += f"%0A {i}) {th}"
         return text
 
     def answer_response(self, answer: List[Answer]) -> str:
