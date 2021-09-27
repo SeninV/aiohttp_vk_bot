@@ -2,9 +2,7 @@ import typing
 from logging import getLogger
 import random
 
-from aiohttp.web_exceptions import HTTPConflict
 
-from app.quiz.schemes import ThemeListSchema
 from app.store.bot.models import ScoreModel, GameModel
 from app.store.vk_api.dataclasses import Update, Message
 
@@ -17,16 +15,6 @@ class BotManager:
         self.app = app
         self.bot = None
         self.logger = getLogger("handler")
-        # self.flag_new_game = StartGame(flag= False)
-        # self.flag_start_game = StartGame(flag= False)
-        # self.flag_next_question = StartGame(flag=True)
-        # self.flag = {}
-        # self.game_id = None
-        # self.theme_id = None
-        # self.all_theme_questions = None
-        # self.right_answer = None # что бы каждый раз не обращаться к бд за правильным ответом для сравнения
-        # self.game_score = {}
-        # self.user_attempts = {}
         self.start = {}
 
 
@@ -69,16 +57,7 @@ class BotManager:
             )
         )
         self.start = {}
-        # Флаги
-        # self.flag_new_game.flag = False
-        # self.flag_start_game.flag = False
-        # self.flag_next_question.flag = True
-        # self.game_id = None
-        # self.theme_id = None
-        # self.all_theme_questions = None
-        # self.right_answer = None
-        # self.game_score = {}
-        # self.user_attempts = {}
+
 
 
 
@@ -98,7 +77,6 @@ class BotManager:
             used_questions = used_questions + [question_title]
             await GameModel.update.where(GameModel.id == game_id).gino.first({"used_questions": used_questions})
             question = await self.app.store.quizzes.get_question_by_title(question_title)
-            # self.right_answer = self.app.store.bot_accessor.get_answer(question.answers)
             answer = self.app.store.bot_accessor.answer_response(question.answers)
             await self.app.store.vk_api.send_message(
                 Message(
@@ -130,7 +108,7 @@ class BotManager:
                 # ставим флаг о создании новой игры
                 await self.app.store.bot_accessor.create_game(chat_id=update.object.peer_id,
                                                               status="start",
-                                                              theme="web1",
+                                                              theme="No_theme",
                                                               used_questions=""
                                                               )
                 # получаем список тем в удобном формате
@@ -192,7 +170,6 @@ class BotManager:
                 # Задаем вопрос повторно
                     last_question = (await self.app.store.bot_accessor.get_game_questions(game.get_game_id))[-1]
                     question = await self.app.store.quizzes.get_question_by_title(last_question)
-                    # self.right_answer = self.app.store.bot_accessor.get_answer(question.answers)
                     answer = self.app.store.bot_accessor.answer_response(question.answers)
                     await self.app.store.vk_api.send_message(
                         Message(
@@ -209,8 +186,6 @@ class BotManager:
                     right_answer = self.app.store.bot_accessor.get_answer(question.answers)
                     theme = game.get_theme
                     if update.object.body == right_answer:
-                        # self.flag_next_question.flag = True
-                        # self.game_score[update.object.user_id] += 1
                         score = (await self.app.store.bot_accessor.get_scores(game_id, update.object.user_id)).count
                         score = score + 1
                         # Обнуляем попытки пользователей
@@ -226,17 +201,6 @@ class BotManager:
                     # посылаем следующий вопрос
                         await self.ask_question(update, theme, game_id)
 
-                    # elif sum(user_attempts) >= len(self.user_attempts):
-                    #     await self.app.store.vk_api.send_message(
-                    #         Message(
-                    #             text=f"Никто не ответил правильно( %0A Правильный ответ: {right_answer}",
-                    #             peer_id=update.object.peer_id,
-                    #         )
-                    #     )
-                    #     # self.flag_next_question.flag = True
-                    #     self.user_attempts = self.user_attempts.fromkeys(self.user_attempts, 0)
-                    #
-                    #     await self.ask_question(update, theme, game_id)
                     elif await self.app.store.bot_accessor.get_user_attempts(game_id):
                         await self.app.store.vk_api.send_message(
                             Message(
@@ -258,8 +222,6 @@ class BotManager:
                     )
 
 
-
-
             else:
                 await self.app.store.vk_api.send_message(
                     Message(
@@ -267,24 +229,4 @@ class BotManager:
                         peer_id=update.object.peer_id,
                     )
                 )
-                # a = (await self.app.store.bot_accessor.last_game(update.object.peer_id)).get_status
-                # print(a)
 
-
-
-
-
-                # e = await self.app.store.bot_accessor.get_game(id_=34)
-                # print(e)
-                # print(await GameModel.query.where(GameModel.id == 34).gino.first())
-
-                # await ScoreModel.update.where(ScoreModel.game_id == 17).gino.all({"game_id":17, "user_id":88628474 , "count": 22})
-
-
-                # await self.app.store.vk_api.send_message(
-                #     Message(
-                #         text="s!",
-                #         peer_id=update.object.peer_id,
-                #     )
-                # )
-                pass
