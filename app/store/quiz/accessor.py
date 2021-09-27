@@ -71,6 +71,14 @@ class QuizAccessor(BaseAccessor):
 
     async def list_questions(self, theme_id: Optional[int] = None) -> List[Question]:
         question_list = await self._get_questions_load(self._get_question_join())
+        if theme_id:
+            theme_questions = []
+            for question in question_list:
+                if question.theme_id == theme_id:
+                    theme_questions.append(question)
+            return [o.to_dc() for o in theme_questions]
+        else:
+            return [o.to_dc() for o in question_list]
 
-        return [o.to_dc() for o in question_list]
+
 
