@@ -7,17 +7,19 @@ from app.store.bot.models import User, UserModel, Game, GameModel, Score, ScoreM
 
 class BotAccessor(BaseAccessor):
 
-    async def create_user(self, user_id: int) -> User:
+    async def create_user(self, user_id: int):
         user = await UserModel.create(
             user_id=user_id,
         )
         return user.user_id
 
-    async def get_user(self, user_id: int) -> User:
+    async def get_user(self, user_id: int):
         user = await UserModel.query.where(UserModel.user_id == user_id).gino.first()
+        # if user:
+        #     return user.user_id
         return None if user is None else user.user_id
 
-    async def create_game(self, chat_id: int, status: bool, theme: int, used_questions: int) -> Game:
+    async def create_game(self, chat_id: int, status: bool, theme: int, used_questions: list[str]):
         game = await GameModel.create(
             chat_id=chat_id,
             status=status,
@@ -26,23 +28,34 @@ class BotAccessor(BaseAccessor):
             theme=theme,
             used_questions=used_questions,
         )
-        return game.id
+        return game.to_dc()
 
     async def get_game(self, id_: int) -> Game:
         game = await GameModel.query.where(GameModel.id == id_).gino.first()
+        # if game:
+        #     return game.to_dc()
         return None if game is None else game.to_dc()
+
+    async def last_game(self, chat_id: int):
+        last_game = await GameModel.query.where(GameModel.chat_id == chat_id).order_by(GameModel.id.desc()).gino.first()
+        return None if last_game is None else last_game.to_dc()
+
 
     async def get_game_questions(self, id_: int):
         questions = await self.get_game(id_)
         questions = questions.get_question
+        # if questions:
+        #     return questions
         return None if questions is None else questions
 
 
-    async def create_user_score(self, game_id: int, user_id: int, count: int) -> Score:
+    async def create_user_score(self, game_id: int, user_id: int, count: int, user_attempts:int) -> Score:
         score = await ScoreModel.create(
             game_id=game_id,
             user_id=user_id,
             count=count,
+            user_attempts=user_attempts
+
         )
         return score.to_dc()
 
@@ -70,6 +83,23 @@ class BotAccessor(BaseAccessor):
         for ans in answer:
             if ans.is_correct:
                 return ans.title
+
+    async def get_scores(self, game_id, user_id):
+        score = await ScoreModel.query.where(ScoreModel.game_id == game_id).where(ScoreModel.user_id == user_id).gino.first()
+        return None if score is None else score
+
+    async def get_user_attempts(self, game_id):
+        user_attempts = await ScoreModel.query.where(ScoreModel.game_id == game_id).gino.all()
+        all = 0
+        count = 0
+        for i, att in enumerate(user_attempts, 1):
+            all += att.user_attempts
+            count = i
+        if all == count:
+            return True
+        else:
+            return False
+
 
     async def stat_game_response(self, game_id):
         participants = await ScoreModel.query.where(ScoreModel.game_id == game_id).order_by(ScoreModel.count.desc()).gino.all()
