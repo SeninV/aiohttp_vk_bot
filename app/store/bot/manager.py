@@ -4,7 +4,7 @@ import random
 
 
 from app.store.bot.models import ScoreModel, GameModel
-from app.store.vk_api.dataclasses import Update, Message
+from app.store.vk_api.dataclasses import Update, Message, KeyboardMessage
 
 if typing.TYPE_CHECKING:
     from app.web.app import Application
@@ -50,7 +50,7 @@ class BotManager:
         await GameModel.update.where(GameModel.chat_id == update.object.peer_id).where(GameModel.id == game_id)\
             .gino.first({"status": "finish"})
         participants = await self.app.store.bot_accessor.stat_game_response(game_id)
-        await self.app.store.vk_api.send_message(
+        await self.app.store.vk_api.delet_keyboard(
             Message(
                 text=f"Конец игры! %0A Итоговый счет: {participants}",
                 peer_id=update.object.peer_id,
@@ -77,11 +77,20 @@ class BotManager:
             used_questions = used_questions + [question_title]
             await GameModel.update.where(GameModel.id == game_id).gino.first({"used_questions": used_questions})
             question = await self.app.store.quizzes.get_question_by_title(question_title)
-            answer = self.app.store.bot_accessor.answer_response(question.answers)
-            await self.app.store.vk_api.send_message(
-                Message(
-                    text=f"Вопрос: {question.title} %0A Варианты ответов: {answer}",
+            # answer = self.app.store.bot_accessor.answer_response(question.answers)
+            #
+            # await self.app.store.vk_api.send_message(
+            #     Message(
+            #         text=f"Вопрос: {question.title} %0A Варианты ответов: {answer}",
+            #         peer_id=update.object.peer_id,
+            #     )
+            # )
+            keyboard_answer = self.app.store.bot_accessor.answer_response_keyboard(question.answers)
+            await self.app.store.vk_api.send_keyboard(
+                KeyboardMessage(
+                    text=f"Вопрос: {question.title} %0A",
                     peer_id=update.object.peer_id,
+                    keyboard_text=keyboard_answer,
                 )
             )
         else:
@@ -124,6 +133,7 @@ class BotManager:
 
             # Если игрок уже начал игру и выбрал тему
             elif status == 'start':
+                self.start[game.id] = False
                 themes = await self.app.store.bot_accessor.get_list_themes_for_response()
                 for theme in themes:
                     if update.object.body == theme:
@@ -131,13 +141,14 @@ class BotManager:
                         await self.start_game(update, theme, game_id)
                         # посылаем первую тему
                         await self.ask_question(update, theme, game_id)
-                if self.start == {}:
+                # Если не нашел тему то посылаем список тем заново
+                if self.start[game.id] == False:
                     themes = await self.app.store.bot_accessor.get_list_themes_for_response()
                     text_themes = self.app.store.bot_accessor.theme_response(themes)
                     # высылаем список тем, что бы пользователь определился
                     await self.app.store.vk_api.send_message(
                         Message(
-                            text=f"Выберите тему: {text_themes}",
+                            text=f"Тема не найдена( %0A Выберите тему: {text_themes}",
                             peer_id=update.object.peer_id,
                         )
                     )
@@ -170,11 +181,20 @@ class BotManager:
                 # Задаем вопрос повторно
                     last_question = (await self.app.store.bot_accessor.get_game_questions(game.id))[-1]
                     question = await self.app.store.quizzes.get_question_by_title(last_question)
-                    answer = self.app.store.bot_accessor.answer_response(question.answers)
-                    await self.app.store.vk_api.send_message(
-                        Message(
-                            text=f"Вопрос: {question.title} %0A Варианты ответов: {answer}",
+
+                    # answer = self.app.store.bot_accessor.answer_response(question.answers)
+                    # await self.app.store.vk_api.send_message(
+                    #     Message(
+                    #         text=f"Вопрос: {question.title} %0A Варианты ответов: {answer}",
+                    #         peer_id=update.object.peer_id,
+                    #     )
+                    # )
+                    keyboard_answer = self.app.store.bot_accessor.answer_response_keyboard(question.answers)
+                    await self.app.store.vk_api.send_keyboard(
+                        KeyboardMessage(
+                            text=f"Вопрос: {question.title} %0A",
                             peer_id=update.object.peer_id,
+                            keyboard_text=keyboard_answer,
                         )
                     )
 
@@ -185,14 +205,23 @@ class BotManager:
                     question = await self.app.store.quizzes.get_question_by_title(last_question)
                     right_answer = self.app.store.bot_accessor.get_answer(question.answers)
                     theme = game.theme
-                    if update.object.body == right_answer:
+                    # второе сравнение для клавиатуры в беседе
+
+                    if update.object.body == right_answer or \
+                            update.object.body == f"[club206933962|@club206933962] {right_answer}":
                         score = (await self.app.store.bot_accessor.get_scores(game_id, update.object.user_id)).count
                         score = score + 1
                         # Обнуляем попытки пользователей
                         await ScoreModel.update.where(ScoreModel.game_id == game_id).gino.all({"user_attempts": 0})
                         await ScoreModel.update.where(ScoreModel.game_id == game_id).\
                             where(ScoreModel.user_id == update.object.user_id).gino.all({"count": score})
-                        await self.app.store.vk_api.send_message(
+                        # await self.app.store.vk_api.send_message(
+                        #     Message(
+                        #         text=f"Правильный ответ!",
+                        #         peer_id=update.object.peer_id,
+                        #     )
+                        # )
+                        await self.app.store.vk_api.delet_keyboard(
                             Message(
                                 text=f"Правильный ответ!",
                                 peer_id=update.object.peer_id,
@@ -200,9 +229,17 @@ class BotManager:
                         )
                     # посылаем следующий вопрос
                         await self.ask_question(update, theme, game_id)
-
+                    # elif not await self.app.store.bot_accessor.get_user_attempts(game_id):
+                    #     keyboard_answer = self.app.store.bot_accessor.answer_response_keyboard(question.answers)
+                    #     await self.app.store.vk_api.send_keyboard(
+                    #         KeyboardMessage(
+                    #             text=f"Вопрос: {question.title} %0A",
+                    #             peer_id=update.object.peer_id,
+                    #             keyboard_text=keyboard_answer
+                    #         )
+                    #     )
                     elif await self.app.store.bot_accessor.get_user_attempts(game_id):
-                        await self.app.store.vk_api.send_message(
+                        await self.app.store.vk_api.delet_keyboard(
                             Message(
                                 text=f"Никто не ответил правильно( %0A Правильный ответ: {right_answer}",
                                 peer_id=update.object.peer_id,

@@ -7,7 +7,7 @@ from aiohttp import TCPConnector
 from aiohttp.client import ClientSession
 
 from app.base.base_accessor import BaseAccessor
-from app.store.vk_api.dataclasses import Update, Message, UpdateObject
+from app.store.vk_api.dataclasses import Update, Message, UpdateObject, KeyboardMessage
 from app.store.vk_api.poller import Poller
 
 if typing.TYPE_CHECKING:
@@ -148,28 +148,31 @@ class VkApiAccessor(BaseAccessor):
 
             # data["response"]["items"]
     # Клавиатура для вк
-    def get_but(self, text: str):
+    def get_but(self, text: str, colour: str):
         return{
             "action": {
                 "type": "text",
                 "payload": "{\"button\": \"1\"}",
                 "label": f"{text}"
             },
-            "color": "negative"
+            "color": colour
         }
-    def get_keyboard(self):
+    def get_keyboard(self, text: typing.List[str]):
         keyboard = {
-            "one_time": True,
-            "buttons": [[
-                self.get_but('asd'), self.get_but('q')
-            ]]
+            "one_time": False,
+            "buttons": [
+                [self.get_but(text[0], colour= "primary" )],
+                [self.get_but(text[1], colour= "primary" )],
+                [self.get_but(text[2], colour= "primary" )],
+                [self.get_but(text[3], colour= "primary" )]
+            ]
         }
         keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
         keyboard = str(keyboard.decode('utf-8'))
         return keyboard
 
 
-    async def send_keyboard(self, message: Message) -> None:
+    async def send_keyboard(self, message: KeyboardMessage) -> None:
         async with self.session.get(
                 self._build_query(
                     API_PATH,
@@ -179,7 +182,30 @@ class VkApiAccessor(BaseAccessor):
                         "peer_id": message.peer_id,
                         "message": message.text,
                         "access_token": self.app.config.bot.token,
-                        "keyboard": self.get_keyboard()
+                        "keyboard": self.get_keyboard(message.keyboard_text)
+                    },
+                )
+        ) as resp:
+            data = await resp.json()
+            self.logger.info(data)
+
+    async def delet_keyboard(self, message: Message) -> None:
+        keyboard = {
+            "one_time": True,
+            "buttons": [],
+        }
+        keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+        keyboard = str(keyboard.decode('utf-8'))
+        async with self.session.get(
+                self._build_query(
+                    API_PATH,
+                    "messages.send",
+                    params={
+                        "random_id": random.randint(1, 2 ** 32),
+                        "peer_id": message.peer_id,
+                        "message": message.text,
+                        "access_token": self.app.config.bot.token,
+                        "keyboard": keyboard
                     },
                 )
         ) as resp:
