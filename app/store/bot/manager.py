@@ -24,7 +24,7 @@ class BotManager:
         await GameModel.update.where(GameModel.chat_id == update.object.peer_id). \
             where(GameModel.status == "start").gino.first({"theme": theme})
 
-        # смотрим кто есть в чате, и для каждого пользователя создаем запись в бд и счет
+        # смотрим кто   есть в чате, и для каждого пользователя создаем запись в бд и счет
         members = await self.app.store.vk_api.get_members(chat_id=update.object.peer_id)
         for member in members:
             if member > 1:
@@ -56,7 +56,7 @@ class BotManager:
                 peer_id=update.object.peer_id,
             )
         )
-        self.start = {}
+        self.start[game_id] = False
 
 
 
@@ -100,7 +100,7 @@ class BotManager:
             game = await self.app.store.bot_accessor.last_game(update.object.peer_id)
             # Если игр в беседе до этого не было
             if game:
-                status = game.get_status
+                status = game.status
             else:
                 status = "finish"
 
@@ -127,7 +127,7 @@ class BotManager:
                 themes = await self.app.store.bot_accessor.get_list_themes_for_response()
                 for theme in themes:
                     if update.object.body == theme:
-                        game_id = game.get_game_id
+                        game_id = game.id
                         await self.start_game(update, theme, game_id)
                         # посылаем первую тему
                         await self.ask_question(update, theme, game_id)
@@ -146,11 +146,11 @@ class BotManager:
 
             # Прерывание раунда
             elif update.object.body == '\end' and status == 'ask':
-                await self.end_game(update, game.get_game_id)
+                await self.end_game(update, game.id)
 
             # Статистика раунда
             elif update.object.body == '\stat' and status == 'ask':
-                participants = await self.app.store.bot_accessor.stat_game_response(game.get_game_id)
+                participants = await self.app.store.bot_accessor.stat_game_response(game.id)
                 await self.app.store.vk_api.send_message(
                     Message(
                         text=f"Статистика игры: %0A Счет: {participants}",
@@ -162,13 +162,13 @@ class BotManager:
             #     await self.ask_question(update)
 
             elif status == 'ask':
-                game_id = game.get_game_id
+                game_id = game.id
                 # Проверяем не выключился ли сервер на этом моменте, если выключился обнуляем попытки и задаем следующий вопрос
                 user_attempts = (await self.app.store.bot_accessor.get_scores(game_id, update.object.user_id)).user_attempts
                 if self.start == {}:
-                    self.start[game.get_game_id] = True
+                    self.start[game.id] = True
                 # Задаем вопрос повторно
-                    last_question = (await self.app.store.bot_accessor.get_game_questions(game.get_game_id))[-1]
+                    last_question = (await self.app.store.bot_accessor.get_game_questions(game.id))[-1]
                     question = await self.app.store.quizzes.get_question_by_title(last_question)
                     answer = self.app.store.bot_accessor.answer_response(question.answers)
                     await self.app.store.vk_api.send_message(
@@ -184,7 +184,7 @@ class BotManager:
                     last_question = (await self.app.store.bot_accessor.get_game_questions(game_id))[-1]
                     question = await self.app.store.quizzes.get_question_by_title(last_question)
                     right_answer = self.app.store.bot_accessor.get_answer(question.answers)
-                    theme = game.get_theme
+                    theme = game.theme
                     if update.object.body == right_answer:
                         score = (await self.app.store.bot_accessor.get_scores(game_id, update.object.user_id)).count
                         score = score + 1

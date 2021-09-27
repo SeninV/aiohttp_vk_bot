@@ -16,25 +16,25 @@ class Game:
     theme: str
     used_questions: List[str]
 
-    @property
-    def get_question(self):
-        return self.used_questions
-
-    @property
-    def get_status(self):
-        return self.status
-
-    @property
-    def get_game_id(self):
-        return self.id
-
-    @property
-    def get_theme(self):
-        return self.theme
-
-    @property
-    def get_chat_id(self):
-        return self.chat_id
+    # @property
+    # def get_question(self):
+    #     return self.used_questions
+    #
+    # @property
+    # def get_status(self):
+    #     return self.status
+    #
+    # @property
+    # def get_game_id(self):
+    #     return self.id
+    #
+    # @property
+    # def get_theme(self):
+    #     return self.theme
+    #
+    # @property
+    # def get_chat_id(self):
+    #     return self.chat_id
 
 
     # last_question: array
@@ -93,9 +93,9 @@ class Score:
     count: int
     user_attempts: int
 
-    @property
-    def get_score(self):
-        return self.count
+    # @property
+    # def get_score(self):
+    #     return self.count
 
 
 class ScoreModel(db.Model):
