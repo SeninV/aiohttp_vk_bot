@@ -19,7 +19,6 @@ class BotAccessor(BaseAccessor):
         user = await UserModel.query.where(UserModel.user_id == user_id).gino.first()
         if user:
             return user.user_id
-        # return None if user is None else user.user_id
 
     async def create_game(self, chat_id: int, status: bool, theme: int, used_questions: list[str]) -> Game:
         game = await GameModel.create(
@@ -34,22 +33,18 @@ class BotAccessor(BaseAccessor):
 
     async def get_game(self, id_: int) -> Optional[Game]:
         game = await GameModel.query.where(GameModel.id == id_).gino.first()
-        # if game:
-        #     return game.to_dc()
-        return None if game is None else game.to_dc()
+        return None if game is None else game
 
     async def last_game(self, chat_id: int) -> Optional[Game]:
         last_game = await GameModel.query.where(GameModel.chat_id == chat_id).order_by(GameModel.id.desc()).gino.first()
-        return None if last_game is None else last_game.to_dc()
+        if last_game:
+            return last_game.to_dc()
 
 
     async def get_game_questions(self, id_: int) -> Optional[List[str]]:
         questions = await self.get_game(id_)
         questions = questions.used_questions
-        # if questions:
-        #     return questions
         return None if questions is None else questions
-
 
     async def create_user_score(self, game_id: int, user_id: int, count: int, user_attempts:int) -> Score:
         score = await ScoreModel.create(
@@ -96,7 +91,9 @@ class BotAccessor(BaseAccessor):
 
     async def get_scores(self, game_id: int, user_id: int) -> Optional[Score]:
         score = await ScoreModel.query.where(ScoreModel.game_id == game_id).where(ScoreModel.user_id == user_id).gino.first()
-        return None if score is None else score
+        if score:
+            return score
+
 
     async def get_user_attempts(self, game_id: int) -> bool:
         user_attempts = await ScoreModel.query.where(ScoreModel.game_id == game_id).gino.all()
@@ -105,10 +102,8 @@ class BotAccessor(BaseAccessor):
         for i, att in enumerate(user_attempts, 1):
             all += att.user_attempts
             count = i
-        if all == count:
-            return True
-        else:
-            return False
+        return all == count
+
 
 
     async def stat_game_response(self, game_id: int) -> str:
@@ -118,9 +113,4 @@ class BotAccessor(BaseAccessor):
             text += f"%0A {i}) @id{par.user_id} - {par.count}"
         return text
 
-        # await self.app.store.vk_api.send_keyboard(
-        #     Message(
-        #         text="Клава",
-        #         peer_id=update.object.peer_id,
-        #     )
-        # )
+
