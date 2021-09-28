@@ -1,8 +1,8 @@
 import typing
+from datetime import datetime
 from logging import getLogger
 import random
-
-
+import time
 from app.store.bot.models import ScoreModel, GameModel
 from app.store.vk_api.dataclasses import Update, Message, KeyboardMessage
 
@@ -16,6 +16,7 @@ class BotManager:
         self.bot = None
         self.logger = getLogger("handler")
         self.start = {}
+        self.time = {}
 
 
     async def start_game(self, update, theme, game_id):
@@ -48,7 +49,7 @@ class BotManager:
 
     async def end_game(self, update, game_id):
         await GameModel.update.where(GameModel.chat_id == update.object.peer_id).where(GameModel.id == game_id)\
-            .gino.first({"status": "finish"})
+            .gino.first({"end": datetime.now() , "status": "finish"})
         participants = await self.app.store.bot_accessor.stat_game_response(game_id)
         await self.app.store.vk_api.delet_keyboard(
             Message(
@@ -65,6 +66,7 @@ class BotManager:
         # self.flag_next_question.flag = False
         await GameModel.update.where(GameModel.chat_id == update.object.peer_id). \
             where(GameModel.status == "start").gino.first({"status": "ask"})
+        # "end": datetime.now(),
         # Смотрим какие вопросы были использованы и какие вопросы
         used_questions = await self.app.store.bot_accessor.get_game_questions(game_id)
         theme_id = (await self.app.store.quizzes.get_theme_by_title(theme)).id
@@ -93,6 +95,7 @@ class BotManager:
                     keyboard_text=keyboard_answer,
                 )
             )
+            self.time[game_id] = time.time() + 30
         else:
             await self.app.store.vk_api.send_message(
                 Message(
@@ -178,6 +181,7 @@ class BotManager:
                 user_attempts = (await self.app.store.bot_accessor.get_scores(game_id, update.object.user_id)).user_attempts
                 if self.start == {}:
                     self.start[game.id] = True
+
                 # Задаем вопрос повторно
                     last_question = (await self.app.store.bot_accessor.get_game_questions(game.id))[-1]
                     question = await self.app.store.quizzes.get_question_by_title(last_question)
@@ -197,6 +201,8 @@ class BotManager:
                             keyboard_text=keyboard_answer,
                         )
                     )
+                    self.time[game_id] = time.time() + 30
+
 
                 elif user_attempts < 1:
                     await ScoreModel.update.where(ScoreModel.game_id == game_id). \
@@ -207,8 +213,8 @@ class BotManager:
                     theme = game.theme
                     # второе сравнение для клавиатуры в беседе
 
-                    if update.object.body == right_answer or \
-                            update.object.body == f"[club206933962|@club206933962] {right_answer}":
+                    if self.time[game_id] > time.time() and (update.object.body == right_answer or
+                                                    update.object.body == f"[club206933962|@club206933962] {right_answer}"):
                         score = (await self.app.store.bot_accessor.get_scores(game_id, update.object.user_id)).count
                         score = score + 1
                         # Обнуляем попытки пользователей
@@ -238,6 +244,18 @@ class BotManager:
                     #             keyboard_text=keyboard_answer
                     #         )
                     #     )
+                    elif self.time[game_id] < time.time():
+
+                        await self.app.store.vk_api.delet_keyboard(
+                            Message(
+                                text=f"Время на вопрос истекло ( %0A Правильный ответ: {right_answer}",
+                                peer_id=update.object.peer_id,
+                            )
+                        )
+                        await ScoreModel.update.where(ScoreModel.game_id == game_id).gino.all({"user_attempts": 0})
+
+                        await self.ask_question(update, theme, game_id)
+
                     elif await self.app.store.bot_accessor.get_user_attempts(game_id):
                         await self.app.store.vk_api.delet_keyboard(
                             Message(
