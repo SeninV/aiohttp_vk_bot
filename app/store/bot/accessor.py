@@ -33,8 +33,7 @@ class BotAccessor(BaseAccessor):
 
     async def get_game(self, id_: int) -> Optional[Game]:
         game = await GameModel.query.where(GameModel.id == id_).gino.first()
-        if game:
-            return game.to_dc()
+        return None if game is None else game
 
     async def last_game(self, chat_id: int) -> Optional[Game]:
         last_game = await GameModel.query.where(GameModel.chat_id == chat_id).order_by(GameModel.id.desc()).gino.first()
@@ -45,9 +44,7 @@ class BotAccessor(BaseAccessor):
     async def get_game_questions(self, id_: int) -> Optional[List[str]]:
         questions = await self.get_game(id_)
         questions = questions.used_questions
-        if questions:
-            return questions
-
+        return None if questions is None else questions
 
     async def create_user_score(self, game_id: int, user_id: int, count: int, user_attempts:int) -> Score:
         score = await ScoreModel.create(
