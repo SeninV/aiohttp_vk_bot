@@ -31,24 +31,14 @@ class VkApiAccessor(BaseAccessor):
             await self._get_long_poll_service()
         except Exception as e:
             self.logger.error("Exception", exc_info=e)
-        # await self.send_message(
-        #     message=Message(
-        #         text="Включаюсь",
-        #         peer_id=88628474,
-        #     )
-        # )
+
         self.poller = Poller(app.store)
         self.logger.info("start polling")
         await self.poller.start()
 
     async def disconnect(self, app: "Application"):
         if self.session:
-            # await self.send_message(
-            #     message=Message(
-            #         text="Выключаюсь",
-            #         peer_id=88628474,
-            #     )
-            # )
+
             await self.session.close()
         if self.poller:
             await self.poller.stop()
@@ -88,7 +78,7 @@ class VkApiAccessor(BaseAccessor):
                     "act": "a_check",
                     "key": self.key,
                     "ts": self.ts,
-                    "wait": 30,
+                    "wait": 60,
                 },
             )
         ) as resp:
@@ -146,7 +136,6 @@ class VkApiAccessor(BaseAccessor):
                 members.append(i["member_id"])
         return members
 
-            # data["response"]["items"]
     # Клавиатура для вк
     def get_but(self, text: str, colour: str):
         return{

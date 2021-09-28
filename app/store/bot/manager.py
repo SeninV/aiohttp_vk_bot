@@ -17,6 +17,7 @@ class BotManager:
         self.logger = getLogger("handler")
         self.start = {}
         self.time = {}
+        # self.session = {}
 
 
     async def start_game(self, update, theme, game_id):
@@ -107,6 +108,7 @@ class BotManager:
 
 
     async def handle_updates(self, updates: list[Update]):
+        # self.session = self.session.fromkeys(self.session, False)
         for update in updates:
             # Берем статус последней игры сыгранной в этой бесед(если она есть)
             game = await self.app.store.bot_accessor.last_game(update.object.peer_id)
@@ -174,7 +176,6 @@ class BotManager:
             # Посылание вопросов
             # elif status == 'ask':
             #     await self.ask_question(update)
-
             elif status == 'ask':
                 game_id = game.id
                 # Проверяем не выключился ли сервер на этом моменте, если выключился обнуляем попытки и задаем следующий вопрос
@@ -284,4 +285,7 @@ class BotManager:
                         peer_id=update.object.peer_id,
                     )
                 )
+
+            # self.session[game.chat_id] = True
+
 

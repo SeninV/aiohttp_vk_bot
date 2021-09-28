@@ -16,32 +16,6 @@ class Game:
     theme: str
     used_questions: List[str]
 
-    # @property
-    # def get_question(self):
-    #     return self.used_questions
-    #
-    # @property
-    # def get_status(self):
-    #     return self.status
-    #
-    # @property
-    # def get_game_id(self):
-    #     return self.id
-    #
-    # @property
-    # def get_theme(self):
-    #     return self.theme
-    #
-    # @property
-    # def get_chat_id(self):
-    #     return self.chat_id
-
-
-    # last_question: array
-#    Лист из вопросов которые были использованы
-#    (для того что бы можно было продолжить игру после падения
-#    и что бы вопросы не повторялись)
-
 
 class GameModel(db.Model):
     __tablename__ = "games"
@@ -93,9 +67,6 @@ class Score:
     count: int
     user_attempts: int
 
-    # @property
-    # def get_score(self):
-    #     return self.count
 
 
 class ScoreModel(db.Model):
