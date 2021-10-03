@@ -14,6 +14,7 @@ class Game:
     start: datetime
     end: datetime
     theme: str
+    winner: int
     used_questions: List[str]
 
 
@@ -26,6 +27,7 @@ class GameModel(db.Model):
     start = db.Column(db.DateTime(), nullable=False)
     end = db.Column(db.DateTime(), nullable=False)
     theme = db.Column(db.ForeignKey("themes.title"), nullable=False) # ondelete="CASCADE"
+    winner = db.Column(db.ForeignKey("users.user_id"))
     used_questions = db.Column(db.ARRAY(db.String()))
 
 
@@ -37,6 +39,7 @@ class GameModel(db.Model):
             start=self.start,
             end=self.end,
             theme=self.theme,
+            winner=self.winner,
             used_questions=self.used_questions,
         )
 

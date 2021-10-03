@@ -17,7 +17,6 @@ class BotManager:
         self.logger = getLogger("handler")
         self.start = {}
         self.time = {}
-        # self.session = {}
 
 
     async def start_game(self, update, theme, game_id):
@@ -49,7 +48,7 @@ class BotManager:
 
     async def end_game(self, update, game_id):
         await GameModel.update.where(GameModel.chat_id == update.object.peer_id).where(GameModel.id == game_id)\
-            .gino.first({"end": datetime.now() , "status": "finish"})
+            .gino.first({"end": datetime.now() , "status": "finish", "winner": update.object.user_id})
         participants = await self.app.store.bot_accessor.stat_game_response(game_id)
         await self.app.store.vk_api.delet_keyboard(
             Message(
@@ -187,7 +186,7 @@ class BotManager:
                     self.time[game_id] = time.time() + 30
 
 
-                elif user_attempts < 1:
+                elif user_attempts < 1 and self.time[game_id] > time.time():
                     await ScoreModel.update.where(ScoreModel.game_id == game_id). \
                         where(ScoreModel.user_id == update.object.user_id).gino.all({"user_attempts": 1})
                     last_question = (await self.app.store.bot_accessor.get_game_questions(game_id))[-1]
@@ -196,8 +195,7 @@ class BotManager:
                     theme = game.theme
                     # второе сравнение для клавиатуры в беседе
 
-                    if self.time[game_id] > time.time() and (update.object.body == right_answer or
-                                                    update.object.body == f"[club206933962|@club206933962] {right_answer}"):
+                    if update.object.body == right_answer or update.object.body == f"[club206933962|@club206933962] {right_answer}":
                         score = (await self.app.store.bot_accessor.get_scores(game_id, update.object.user_id)).count
                         score = score + 1
                         # Обнуляем попытки пользователей
@@ -214,17 +212,6 @@ class BotManager:
                     # посылаем следующий вопрос
                         await self.ask_question(update, theme, game_id)
 
-                    elif self.time[game_id] < time.time():
-
-                        await self.app.store.vk_api.delet_keyboard(
-                            Message(
-                                text=f"Время на вопрос истекло ( %0A Правильный ответ: {right_answer}",
-                                peer_id=update.object.peer_id,
-                            )
-                        )
-                        await ScoreModel.update.where(ScoreModel.game_id == game_id).gino.all({"user_attempts": 0})
-
-                        await self.ask_question(update, theme, game_id)
 
                     elif await self.app.store.bot_accessor.get_user_attempts(game_id):
                         await self.app.store.vk_api.delet_keyboard(
@@ -237,6 +224,21 @@ class BotManager:
 
                         await self.ask_question(update, theme, game_id)
 
+                elif self.time[game_id] < time.time():
+                    last_question = (await self.app.store.bot_accessor.get_game_questions(game_id))[-1]
+                    question = await self.app.store.quizzes.get_question_by_title(last_question)
+                    right_answer = self.app.store.bot_accessor.get_answer(question.answers)
+                    theme = game.theme
+                    await self.app.store.vk_api.delet_keyboard(
+                        Message(
+                            text=f"Время на вопрос истекло ( %0A Правильный ответ: {right_answer}",
+                            peer_id=update.object.peer_id,
+                        )
+                    )
+                    await ScoreModel.update.where(ScoreModel.game_id == game_id).gino.all({"user_attempts": 0})
+
+                    await self.ask_question(update, theme, game_id)
+
 
                 else:
                     await self.app.store.vk_api.send_message(
@@ -246,7 +248,15 @@ class BotManager:
                         )
                     )
 
-
+            # Статистика раунда
+            elif update.object.body == '\stat' and status == 'finish':
+                participants = await self.app.store.bot_accessor.stat_game_response(game.id)
+                await self.app.store.vk_api.send_message(
+                    Message(
+                        text=f"Статистика игры: %0A Счет: {participants}",
+                        peer_id=update.object.peer_id,
+                    )
+                )
             else:
                 await self.app.store.vk_api.send_message(
                     Message(
