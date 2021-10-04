@@ -96,7 +96,7 @@ class BotAccessor(BaseAccessor):
         text = ""
         for i, th in enumerate(theme):
             if th != "No_theme":
-                text += f"%0A {i}) {th}"
+                text += f"%0A ************ %0A {th}"
         return text
 
     def answer_response(self, answer: List[Answer]) -> str:

@@ -2,7 +2,7 @@
 from aiohttp_apispec import request_schema, response_schema
 from aiohttp_session import new_session
 
-from app.admin.schemes import AdminSchema, ListGameSchema, GameSchema, ListStatGameSchema, UserSchema
+from app.admin.schemes import AdminSchema, ListGameSchema, ListStatGameSchema, UserWinSchema
 from app.web.app import View
 from aiohttp.web import HTTPForbidden, HTTPUnauthorized
 
@@ -67,14 +67,15 @@ class AdminGameStat(AuthRequiredMixin, View):
             games_total += 1
             duration_total = duration_total + (game.end - game.start).total_seconds()
             if day != game.end.day:
+                day = game.end.day
                 all_days += 1
         for game in games:
             count[game.winner] += 1
-        a = max(count , key=count.get)
-        winner = UserSchema().dump(
+        a = max(count, key=count.get)
+        winner = UserWinSchema().dump(
             {
                 "user_id": a,
-                "win_count": count[a]
+                "win_count": count[a] - 1
             }
         )
         game_avg_per_day = games_total/all_days

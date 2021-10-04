@@ -10,7 +10,7 @@ class AdminSchema(Schema):
 
 class UserSchema(Schema):
     user_id = fields.Int(required=True)
-    win_count = fields.Int(required=True)
+    count = fields.Int(required=True)
 
 
 
@@ -31,9 +31,13 @@ class ListGameSchema(Schema):
     games = fields.Nested(GameSchema, many=True)
 
 
+class UserWinSchema(Schema):
+    user_id = fields.Int(required=True)
+    win_count = fields.Int(required=True)
+
 class ListStatGameSchema(Schema):
     game_avg_per_day = fields.Float(required=True)
-    winner = fields.Nested(UserSchema, many=False)
-    duration_total = fields.Str(required=True)
+    winner = fields.Nested(UserWinSchema, many=False)
+    duration_total = fields.Int(required=True)
     games_total = fields.Int(required=True)
-    duration_avg = fields.Float(required=True)
+    duration_avg = fields.Int(required=True)
