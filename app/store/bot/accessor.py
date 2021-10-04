@@ -1,6 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
 
+from sqlalchemy.sql.functions import count
+from gino.loader import ColumnLoader
+
 from app.base.base_accessor import BaseAccessor
 from app.quiz.models import Answer
 from app.quiz.schemes import ThemeListSchema
@@ -33,7 +36,32 @@ class BotAccessor(BaseAccessor):
 
     async def get_game(self, id_: int) -> Optional[Game]:
         game = await GameModel.query.where(GameModel.id == id_).gino.first()
-        return None if game is None else game
+        return None if game is None else game.to_dc()
+
+
+    def _get_winner_join(self):
+        return GameModel.outerjoin(
+            ScoreModel,
+            GameModel.id == ScoreModel.game_id,
+        ).select()
+
+
+    def _get_winner_load(self, query):
+        return query.gino.load(
+            GameModel.load(winner=ScoreModel)
+        ).all()
+
+    async def list_games(self, limit: Optional[str] = None, offset: Optional[str] = None) -> Optional[List[Game]]:
+        query = self._get_winner_join().where(GameModel.winner == ScoreModel.user_id).order_by(GameModel.id.asc()).limit(limit).offset(offset)
+        game_list = await self._get_winner_load(query)
+        if game_list:
+            return game_list
+
+    async def list_game_stats(self) -> Optional[List[Game]]:
+        game_list = await GameModel.query.gino.all()
+        if game_list:
+            return game_list
+
 
     async def last_game(self, chat_id: int) -> Optional[Game]:
         last_game = await GameModel.query.where(GameModel.chat_id == chat_id).order_by(GameModel.id.desc()).gino.first()
@@ -68,7 +96,7 @@ class BotAccessor(BaseAccessor):
         text = ""
         for i, th in enumerate(theme):
             if th != "No_theme":
-                text += f"%0A {i}) {th}"
+                text += f"%0A ************ %0A {th}"
         return text
 
     def answer_response(self, answer: List[Answer]) -> str:

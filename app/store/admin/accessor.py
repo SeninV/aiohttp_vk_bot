@@ -18,7 +18,6 @@ class AdminAccessor(BaseAccessor):
         await self.create_admin(
             email=app.config.admin.email, password=app.config.admin.password
         )
-
     async def get_by_email(self, email: str) -> Optional[Admin]:
         admin = await AdminModel.query.where(AdminModel.email == email).gino.first()
         return None if admin is None else admin.to_dc()
@@ -28,5 +27,4 @@ class AdminAccessor(BaseAccessor):
             email=email,
             password=sha256(password.encode()).hexdigest(),
         )
-
         return admin.to_dc()
