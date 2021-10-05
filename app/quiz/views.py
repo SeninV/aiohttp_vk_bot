@@ -75,7 +75,7 @@ class QuestionListView(AuthRequiredMixin, View):
     @response_schema(ListQuestionSchema)
     async def get(self):
         questions = await self.store.quizzes.list_questions(
-            theme_id=self.data.get("theme_id")
+            theme_id=self.request.query.get("theme_id")
         )
         return json_response(
             data=ListQuestionSchema().dump(

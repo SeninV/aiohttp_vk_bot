@@ -1,8 +1,16 @@
 import json
 import typing
 
-from aiohttp.web_exceptions import HTTPUnprocessableEntity, HTTPException, HTTPBadRequest, HTTPUnauthorized, \
-    HTTPForbidden, HTTPNotFound, HTTPMethodNotAllowed, HTTPConflict
+from aiohttp.web_exceptions import (
+    HTTPUnprocessableEntity,
+    HTTPException,
+    HTTPBadRequest,
+    HTTPUnauthorized,
+    HTTPForbidden,
+    HTTPNotFound,
+    HTTPMethodNotAllowed,
+    HTTPConflict,
+)
 from aiohttp.web_middlewares import middleware
 from aiohttp_apispec import validation_middleware
 from aiohttp_session import get_session
@@ -102,9 +110,7 @@ async def error_handling_middleware(request: "Request", handler):
         )
     except Exception as e:
         return error_json_response(
-            http_status=500,
-            status="internal server error",
-            message=str(e)
+            http_status=500, status="internal server error", message=str(e)
         )
 
 

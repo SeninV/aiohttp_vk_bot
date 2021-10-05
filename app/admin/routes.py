@@ -15,4 +15,3 @@ def setup_routes(app: "Application"):
     app.router.add_view("/admin.current", AdminCurrentView)
     app.router.add_view("/admin.fetch_games", AdminGames)
     app.router.add_view("/admin.fetch_game_stats", AdminGameStat)
-
