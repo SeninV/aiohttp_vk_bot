@@ -16,9 +16,25 @@ class Game:
     theme: str
     used_questions: List[str]
 
-    @property
-    def get_question(self):
-        return self.used_questions
+    # @property
+    # def get_question(self):
+    #     return self.used_questions
+    #
+    # @property
+    # def get_status(self):
+    #     return self.status
+    #
+    # @property
+    # def get_game_id(self):
+    #     return self.id
+    #
+    # @property
+    # def get_theme(self):
+    #     return self.theme
+    #
+    # @property
+    # def get_chat_id(self):
+    #     return self.chat_id
 
 
     # last_question: array
@@ -75,6 +91,11 @@ class Score:
     game_id: int
     user_id: int
     count: int
+    user_attempts: int
+
+    # @property
+    # def get_score(self):
+    #     return self.count
 
 
 class ScoreModel(db.Model):
@@ -84,15 +105,14 @@ class ScoreModel(db.Model):
     game_id = db.Column(db.ForeignKey("games.id"), nullable=False)
     user_id = db.Column(db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     count = db.Column(db.Integer(), nullable=False)
+    user_attempts = db.Column(db.Integer(), nullable=False)
 
     def to_dc(self):
         return Score(
             game_id=self.game_id,
             user_id=self.user_id,
             count=self.count,
+            user_attempts=self.user_attempts
         )
 
 
-@dataclass
-class StartGame:
-    flag: bool

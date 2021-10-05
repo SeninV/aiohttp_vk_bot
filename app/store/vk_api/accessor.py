@@ -157,7 +157,7 @@ class VkApiAccessor(BaseAccessor):
     #         },
     #         "color": "negative"
     #     }
-    # def get_keyboard(self):
+    # def get_keyboard(self, text: typing.List[str]):
     #     keyboard = {
     #         "one_time": True,
     #         "buttons": [[
