@@ -16,7 +16,11 @@ with open(os.environ["CONFIGPATH"]) as fh:
 
 
 def set_sqlalchemy_url(user: str, password: str, host: str, db: str):
-    config.set_main_option("sqlalchemy.url", f"postgres://{user}:{password}@{host}/{db}")
+    config.set_main_option(
+        "sqlalchemy.url", f"postgres://{user}:{password}@{host}/{db}"
+    )
+
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -49,7 +53,9 @@ def run_migrations_offline():
     script output.
 
     """
-    set_sqlalchemy_url(app_config.user, app_config.password, app_config.host, app_config.database)
+    set_sqlalchemy_url(
+        app_config.user, app_config.password, app_config.host, app_config.database
+    )
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -69,7 +75,9 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
-    set_sqlalchemy_url(app_config.user, app_config.password, app_config.host, app_config.database)
+    set_sqlalchemy_url(
+        app_config.user, app_config.password, app_config.host, app_config.database
+    )
     connectable = engine_from_config(
         config.get_section(config.config_ini_section),
         prefix="sqlalchemy.",
@@ -77,9 +85,7 @@ def run_migrations_online():
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

@@ -4,11 +4,8 @@ from typing import Optional
 
 from app.base.base_accessor import BaseAccessor
 from app.admin.models import Admin, AdminModel
-from app.store.database.gino import db
-
 if typing.TYPE_CHECKING:
     from app.web.app import Application
-
 
 
 class AdminAccessor(BaseAccessor):
@@ -18,6 +15,7 @@ class AdminAccessor(BaseAccessor):
         await self.create_admin(
             email=app.config.admin.email, password=app.config.admin.password
         )
+
     async def get_by_email(self, email: str) -> Optional[Admin]:
         admin = await AdminModel.query.where(AdminModel.email == email).gino.first()
         return None if admin is None else admin.to_dc()

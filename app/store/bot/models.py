@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List
 
-from app.quiz.models import Question, QuestionModel
 from app.store.database.gino import db
 
 
@@ -26,10 +25,11 @@ class GameModel(db.Model):
     status = db.Column(db.String(), nullable=False)
     start = db.Column(db.DateTime(), nullable=False)
     end = db.Column(db.DateTime(), nullable=False)
-    theme = db.Column(db.ForeignKey("themes.title"), nullable=False) # ondelete="CASCADE"
+    theme = db.Column(
+        db.ForeignKey("themes.title"), nullable=False
+    )
     winner = db.Column(db.ForeignKey("users.user_id"))
     used_questions = db.Column(db.ARRAY(db.String()))
-
 
     def to_dc(self):
         return Game(
@@ -71,13 +71,14 @@ class Score:
     user_attempts: int
 
 
-
 class ScoreModel(db.Model):
     __tablename__ = "scores"
 
     id = db.Column(db.Integer(), primary_key=True)
     game_id = db.Column(db.ForeignKey("games.id"), nullable=False)
-    user_id = db.Column(db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    user_id = db.Column(
+        db.ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
+    )
     count = db.Column(db.Integer(), nullable=False)
     user_attempts = db.Column(db.Integer(), nullable=False)
 
@@ -86,7 +87,5 @@ class ScoreModel(db.Model):
             game_id=self.game_id,
             user_id=self.user_id,
             count=self.count,
-            user_attempts=self.user_attempts
+            user_attempts=self.user_attempts,
         )
-
-

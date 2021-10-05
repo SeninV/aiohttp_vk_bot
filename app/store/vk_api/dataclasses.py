@@ -21,6 +21,7 @@ class Message:
     peer_id: int
     text: str
 
+
 @dataclass
 class KeyboardMessage:
     peer_id: int
