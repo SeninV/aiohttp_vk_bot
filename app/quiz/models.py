@@ -26,14 +26,15 @@ class Answer:
     is_correct: bool
 
 
-
 class AnswerModel(db.Model):
     __tablename__ = "answers"
 
     id = db.Column(db.Integer(), primary_key=True)
     title = db.Column(db.String(), nullable=False)
     is_correct = db.Column(db.Boolean(), nullable=False)
-    question_id = db.Column(db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
+    question_id = db.Column(
+        db.ForeignKey("questions.id", ondelete="CASCADE"), nullable=False
+    )
 
     def to_dc(self):
         return Answer(title=self.title, is_correct=self.is_correct)
@@ -65,6 +66,7 @@ class QuestionModel(db.Model):
             theme_id=self.theme_id,
             answers=[a.to_dc() for a in self._answers],
         )
+
     @property
     def add_answer(self) -> List[AnswerModel]:
         return self._answers

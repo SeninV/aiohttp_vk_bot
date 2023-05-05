@@ -9,7 +9,6 @@ from sqlalchemy.engine.url import URL
 class Database:
     db: Gino
 
-
     def __init__(self, app: "Application"):
         self.app = app
         self.db: Optional[Gino]

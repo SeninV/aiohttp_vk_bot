@@ -11,6 +11,7 @@ def setup_routes(app: "Application"):
         QuestionAddView,
         QuestionListView,
     )
+
     app.router.add_view("/quiz.add_theme", ThemeAddView)
     app.router.add_view("/quiz.list_themes", ThemeListView)
     app.router.add_view("/quiz.add_question", QuestionAddView)

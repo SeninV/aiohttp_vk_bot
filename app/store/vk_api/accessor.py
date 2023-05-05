@@ -38,7 +38,6 @@ class VkApiAccessor(BaseAccessor):
 
     async def disconnect(self, app: "Application"):
         if self.session:
-
             await self.session.close()
         if self.poller:
             await self.poller.stop()
@@ -95,7 +94,7 @@ class VkApiAccessor(BaseAccessor):
                             id=update["object"]["message"]["id"],
                             user_id=update["object"]["message"]["from_id"],
                             body=update["object"]["message"]["text"],
-                            peer_id=update["object"]["message"]["peer_id"]
+                            peer_id=update["object"]["message"]["peer_id"],
                         ),
                     )
                 )
@@ -107,7 +106,7 @@ class VkApiAccessor(BaseAccessor):
                 API_PATH,
                 "messages.send",
                 params={
-                    "random_id": random.randint(1, 2 ** 32),
+                    "random_id": random.randint(1, 2**32),
                     "peer_id": message.peer_id,
                     "message": message.text,
                     "access_token": self.app.config.bot.token,
@@ -123,11 +122,11 @@ class VkApiAccessor(BaseAccessor):
                 API_PATH,
                 "messages.getConversationMembers",
                 params={
-                    "random_id": random.randint(1, 2 ** 32),
+                    "random_id": random.randint(1, 2**32),
                     "peer_id": chat_id,
                     "access_token": self.app.config.bot.token,
                 },
-        )
+            )
         ) as resp:
             data = await resp.json()
             # self.logger.info(data)
@@ -138,42 +137,42 @@ class VkApiAccessor(BaseAccessor):
 
     # Клавиатура для вк
     def get_but(self, text: str, colour: str):
-        return{
+        return {
             "action": {
                 "type": "text",
-                "payload": "{\"button\": \"1\"}",
-                "label": f"{text}"
+                "payload": '{"button": "1"}',
+                "label": f"{text}",
             },
-            "color": colour
+            "color": colour,
         }
+
     def get_keyboard(self, text: typing.List[str]):
         keyboard = {
             "one_time": False,
             "buttons": [
-                [self.get_but(text[0], colour= "primary" )],
-                [self.get_but(text[1], colour= "primary" )],
-                [self.get_but(text[2], colour= "primary" )],
-                [self.get_but(text[3], colour= "primary" )]
-            ]
+                [self.get_but(text[0], colour="primary")],
+                [self.get_but(text[1], colour="primary")],
+                [self.get_but(text[2], colour="primary")],
+                [self.get_but(text[3], colour="primary")],
+            ],
         }
-        keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
-        keyboard = str(keyboard.decode('utf-8'))
+        keyboard = json.dumps(keyboard, ensure_ascii=False).encode("utf-8")
+        keyboard = str(keyboard.decode("utf-8"))
         return keyboard
-
 
     async def send_keyboard(self, message: KeyboardMessage) -> None:
         async with self.session.get(
-                self._build_query(
-                    API_PATH,
-                    "messages.send",
-                    params={
-                        "random_id": random.randint(1, 2 ** 32),
-                        "peer_id": message.peer_id,
-                        "message": message.text,
-                        "access_token": self.app.config.bot.token,
-                        "keyboard": self.get_keyboard(message.keyboard_text)
-                    },
-                )
+            self._build_query(
+                API_PATH,
+                "messages.send",
+                params={
+                    "random_id": random.randint(1, 2**32),
+                    "peer_id": message.peer_id,
+                    "message": message.text,
+                    "access_token": self.app.config.bot.token,
+                    "keyboard": self.get_keyboard(message.keyboard_text),
+                },
+            )
         ) as resp:
             data = await resp.json()
             self.logger.info(data)
@@ -183,20 +182,20 @@ class VkApiAccessor(BaseAccessor):
             "one_time": True,
             "buttons": [],
         }
-        keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
-        keyboard = str(keyboard.decode('utf-8'))
+        keyboard = json.dumps(keyboard, ensure_ascii=False).encode("utf-8")
+        keyboard = str(keyboard.decode("utf-8"))
         async with self.session.get(
-                self._build_query(
-                    API_PATH,
-                    "messages.send",
-                    params={
-                        "random_id": random.randint(1, 2 ** 32),
-                        "peer_id": message.peer_id,
-                        "message": message.text,
-                        "access_token": self.app.config.bot.token,
-                        "keyboard": keyboard
-                    },
-                )
+            self._build_query(
+                API_PATH,
+                "messages.send",
+                params={
+                    "random_id": random.randint(1, 2**32),
+                    "peer_id": message.peer_id,
+                    "message": message.text,
+                    "access_token": self.app.config.bot.token,
+                    "keyboard": keyboard,
+                },
+            )
         ) as resp:
             data = await resp.json()
             self.logger.info(data)

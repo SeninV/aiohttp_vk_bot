@@ -24,4 +24,3 @@ class AdminModel(db.Model):
 
     def to_dc(self):
         return Admin(id=self.id, email=self.email, password=self.password)
-

@@ -10,7 +10,6 @@ if typing.TYPE_CHECKING:
     from app.web.app import Application
 
 
-
 class AdminAccessor(BaseAccessor):
     async def connect(self, app: "Application"):
         await super().connect(app)
